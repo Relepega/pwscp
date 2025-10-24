@@ -20,7 +20,7 @@ namespace userInterface {
     private:
         QWidget* centralWidget;
 
-        QIcon* appIcon;
+        std::unique_ptr<QIcon> appIcon;
         QSystemTrayIcon* sysTray;
 
         QMenu* trayMenu;

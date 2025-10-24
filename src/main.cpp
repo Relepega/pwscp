@@ -7,15 +7,20 @@
 #include <iostream>
 
 int main(int argc, char *argv[]) {
-    QApplication a(argc, argv);
+    try {
+        QApplication a(argc, argv);
 
-    a.setObjectName(QAnyStringView(appStrings::appNameWithVersion()));
-    QCoreApplication::setApplicationName(appStrings::APP_NAME.data());
-    QCoreApplication::setOrganizationName(appStrings::ORG_NAME.data());
+        a.setObjectName(QAnyStringView(appStrings::appNameWithVersion()));
+        QCoreApplication::setApplicationName(appStrings::APP_NAME.data());
+        QCoreApplication::setOrganizationName(appStrings::ORG_NAME.data());
 
-    const userInterface::MainWindow mainWindow;
+        const userInterface::MainWindow mainWindow;
 
-    return QApplication::exec();
+        return QApplication::exec();
+    } catch (const std::exception& e) {
+        qCritical() << "Initialization error:" << e.what();
+        return -1;
+    }
 
     // auto soundcards = AudioAPI::getAvailableSoundcards();
     //
@@ -26,5 +31,4 @@ int main(int argc, char *argv[]) {
     //
     //     std::cout << "\n";
     // }
-
 }

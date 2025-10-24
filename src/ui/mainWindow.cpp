@@ -23,7 +23,7 @@ namespace userInterface {
          *
          */
 
-        appIcon = new QIcon("");
+        std::unique_ptr<QIcon> appIcon = std::make_unique<QIcon>("");
         sysTray = new QSystemTrayIcon(*appIcon, this);
         trayMenu = new QMenu(this);
 

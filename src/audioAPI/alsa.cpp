@@ -18,8 +18,15 @@ namespace AudioAPI {
             std::string hwName = "hw:"+cardName;
 
             snd_ctl_t* cardHandle = nullptr;
+            // Use unique_ptr for automatic resource management
+            std::unique_ptr<snd_ctl_t, decltype(&snd_ctl_close)> ctlHandle(snd_ctl_open(&cardHandle, hwName.c_str(), 0) >= 0 ? cardHandle : nullptr, snd_ctl_close);
+
+            if (!ctlHandle) {
+                continue;
+            }
 
             if (snd_ctl_open(&cardHandle, hwName.c_str(), 0) < 0) {
+                std::cerr << "Could not open card at index " << cardIndex << std::endl;                continue;
                 continue;
             }
 
@@ -42,6 +49,8 @@ namespace AudioAPI {
             if (snd_card_get_longname(cardIndex, &cstr_name) >= 0 && cstr_name) {
                 sc->longName = cstr_name;
             }
+
+            free(cstr_name);
 
             // probe for supported sr and bs
             std::set<unsigned int> sampleRates;
@@ -78,10 +87,17 @@ namespace AudioAPI {
                     }
                 }
 
-                snd_pcm_hw_params_free(params);
+
+                if (params) {
+                    snd_pcm_hw_params_free(params);
+                    params = nullptr;
+                }
             }
 
-            snd_pcm_close(pcm);
+            if (pcm) {
+                snd_pcm_close(pcm);
+                pcm = nullptr;
+            }
 
             sc->supportedSampleRates.assign(sampleRates.begin(), sampleRates.end());
             sc->supportedBufferSizes.assign(bufferSizes.begin(), bufferSizes.end());
