@@ -1,14 +1,12 @@
 cmake_minimum_required(VERSION 4.0)
 project(pwscp LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-
-find_package(PkgConfig REQUIRED)
 
 find_package(Qt6 COMPONENTS
              Core
@@ -16,7 +14,7 @@ find_package(Qt6 COMPONENTS
              Widgets
              REQUIRED)
 
-pkg_check_modules(ALSA REQUIRED alsa)
+find_package(ALSA REQUIRED)
 
 add_executable(${PROJECT_NAME} src/main.cpp
                src/ui/mainWindow.cpp
@@ -29,22 +27,13 @@ add_executable(${PROJECT_NAME} src/main.cpp
                src/audioAPI/soundcard.cpp
 )
 
-if(alsa_FOUND)
-endif()
-
-if (ALSA_FOUND)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${ALSA_INCLUDE_DIRS})
-
-    #debug prints
-    message(STATUS "ALSA include dirs: ${ALSA_INCLUDE_DIRS}")
-    message(STATUS "ALSA libs: ${ALSA_LIBRARIES}")
-endif()
+target_include_directories(${PROJECT_NAME} PRIVATE ${ALSA_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME}
                       Qt::Core
                       Qt::Gui
                       Qt::Widgets
-                      ${ALSA_LIBRARIES}
+                      ALSA::ALSA
 )
 
 # warnings for debug

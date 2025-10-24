@@ -133,6 +133,7 @@ namespace userInterface {
         });
 
         // Operation Mode - Row 3
+
         groupBox_SampleRate = new QGroupBox(centralWidget);
         groupBox_SampleRate -> setGeometry(95, 165, 155, 95);
         groupBox_SampleRate -> setFlat(true);
