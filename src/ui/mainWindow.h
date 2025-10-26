@@ -14,7 +14,7 @@
 #include "../audioAPI/alsa.h"
 
 namespace userInterface {
-    class MainWindow : public QMainWindow {
+    class MainWindow final : public QMainWindow {
         Q_OBJECT
 
     private:
