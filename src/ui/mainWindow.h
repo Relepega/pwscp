@@ -12,6 +12,7 @@
 #include <QWidget>
 
 #include "../audioAPI/alsa.h"
+#include "src/audioAPI/Pipewire.h"
 
 namespace userInterface {
     class MainWindow final : public QMainWindow {
@@ -57,6 +58,7 @@ namespace userInterface {
 
         bool trueCloseSignal = false;
         std::unique_ptr<AudioAPI::audioDevices> adevs;
+        AudioAPI::PipewireConnection pwConn;
 
     protected:
         void closeEvent(QCloseEvent *event) override;
@@ -70,6 +72,13 @@ private slots:
     public:
         explicit MainWindow(QWidget* parent = nullptr);
         ~MainWindow() override;
+        void disableUI() const;
+        void enableUI() const;
+        void fillSampleRateComboBox() const;
+        void fillBufferSizeComboBox() const;
+
+        int currSampleRateIndex() const;
+        int currBufferSizeIndex() const;
     };
 }
 
