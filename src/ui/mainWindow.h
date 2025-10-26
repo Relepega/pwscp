@@ -56,7 +56,7 @@ namespace userInterface {
         QPushButton* button_Cancel;
 
         bool trueCloseSignal = false;
-        std::unique_ptr<AudioAPI::Soundcards> soundcards;
+        std::unique_ptr<AudioAPI::audioDevices> adevs;
 
     protected:
         void closeEvent(QCloseEvent *event) override;

@@ -1,5 +1,6 @@
 #include "alsa.h"
 
+#include <algorithm>
 #include <alsa/asoundlib.h>
 #include <iostream>
 #include <map>
@@ -8,101 +9,121 @@
 #include <vector>
 
 namespace AudioAPI {
-    std::unique_ptr<Soundcards> getAvailableSoundcards() {
-        auto scs = std::make_unique<Soundcards>();
+    std::vector<int> STD_BUFFER_SIZES() {
+        std::vector<int> bsVec = {};
 
-        int cardIndex= -1;
+        for (int bs = 2; bs <= 8192; bs *= 2) {
+            bsVec.push_back(bs);
+        }
+
+        return bsVec;
+    };
+
+    std::unique_ptr<audioDevices> getAvailableAudioDevices() {
+        auto scs = std::make_unique<audioDevices>();
+
+        int cardIndex = -1;
 
         while (snd_card_next(&cardIndex) >= 0 && cardIndex >= 0) {
             std::string cardName = std::to_string(cardIndex);
-            std::string hwName = "hw:"+cardName;
+            std::string hwName = "hw:" + cardName;
 
             snd_ctl_t* cardHandle = nullptr;
-            // Use unique_ptr for automatic resource management
-            std::unique_ptr<snd_ctl_t, decltype(&snd_ctl_close)> ctlHandle(snd_ctl_open(&cardHandle, hwName.c_str(), 0) >= 0 ? cardHandle : nullptr, snd_ctl_close);
-
-            if (!ctlHandle) {
-                continue;
-            }
 
             if (snd_ctl_open(&cardHandle, hwName.c_str(), 0) < 0) {
-                std::cerr << "Could not open card at index " << cardIndex << std::endl;                continue;
+                std::cerr << "Could not open card at index " << cardIndex << std::endl;
                 continue;
             }
 
-            // enumerate soundcard devices
+            // enumerate devices on current card
             int cardDeviceIndex = -1;
-            if (snd_ctl_pcm_next_device(cardHandle, &cardDeviceIndex) < 0 || cardDeviceIndex < 0) {
-                snd_ctl_close(cardHandle);
-                continue;
-            }
+            while (snd_ctl_pcm_next_device(cardHandle, &cardDeviceIndex) >= 0 && cardDeviceIndex >= 0) {
+                char devName[128];
+                snprintf(devName, sizeof(devName), "hw:%d,%d", cardIndex, cardDeviceIndex);
 
-            // probe for name and index
-            auto sc = std::make_unique<Soundcard>();
-            sc->cardIndex = cardIndex;
+                auto sc = std::make_unique<audioDevice>();
+                sc->cardIndex = cardIndex;
+                sc->cardHardwareName = hwName;
 
-            char* cstr_name = nullptr;
-            if (snd_card_get_name(cardIndex, &cstr_name) >= 0 && cstr_name) {
-                sc->name = cstr_name;
-            }
+                snd_pcm_t* pcmPlayback = nullptr;
+                snd_pcm_t* pcmCapture = nullptr;
 
-            if (snd_card_get_longname(cardIndex, &cstr_name) >= 0 && cstr_name) {
-                sc->longName = cstr_name;
-            }
+                sc->isPlaybackDevice = (snd_pcm_open(&pcmPlayback, devName, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) == 0);
+                sc->isCaptureDevice = (snd_pcm_open(&pcmCapture, devName, SND_PCM_STREAM_CAPTURE, SND_PCM_NONBLOCK) == 0);
 
-            free(cstr_name);
+                // Close the test handles
+                if (pcmPlayback) {
+                    snd_pcm_close(pcmPlayback);
+                    pcmPlayback = nullptr;
+                }
+                if (pcmCapture) {
+                    snd_pcm_close(pcmCapture);
+                    pcmCapture = nullptr;
+                }
 
-            // probe for supported sr and bs
-            std::set<unsigned int> sampleRates;
-            std::set<unsigned int> bufferSizes;
-
-            std::vector<unsigned int> probeSR = {8000, 16000, 32000, 44100, 48000, 64000, 88200, 96000, 128000, 176400, 192000, 256000, 352800, 384000, 512000, 705600, 768000};
-            std::vector<snd_pcm_uframes_t> probeBS = {};
-
-            for (snd_pcm_uframes_t bs = 2; bs <= 8192; bs *= 2) {
-                probeBS.push_back(bs);
-            }
-
-            char devName[128]; // you never know...
-            snprintf(devName, sizeof(devName), "hw:%d,%d", cardIndex, cardDeviceIndex);
-
-            snd_pcm_t* pcm = nullptr;
-
-            if (snd_pcm_open(&pcm, devName, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) == 0) { // SND_PCM_NONBLOCK or 0
-                snd_pcm_hw_params_t* params = nullptr;
-
-                if (snd_pcm_hw_params_malloc(&params) == 0) {
-                    if (snd_pcm_hw_params_any(pcm, params) == 0) {
-                        for (const auto rate : probeSR) {
-                            if (snd_pcm_hw_params_test_rate(pcm, params, rate, 0) == 0 && !sampleRates.contains(rate)) {
-                                sampleRates.insert(rate);
-                            }
-                        }
-
-                        for (const auto bs : probeBS) {
-                            if (snd_pcm_hw_params_test_buffer_size(pcm, params, bs) == 0) {
-                                bufferSizes.insert(bs);
-                            }
-                        }
+                // get card name (same for all devices on this card)
+                char* cstr_name = nullptr;
+                if (snd_card_get_name(cardIndex, &cstr_name) >= 0 && cstr_name) {
+                    sc->name = cstr_name;
+                    // append device index if there are multiple devices
+                    if (cardDeviceIndex > 0) {
+                        sc->name += " [Device " + std::to_string(cardDeviceIndex) + "]";
                     }
                 }
 
-
-                if (params) {
-                    snd_pcm_hw_params_free(params);
-                    params = nullptr;
+                if (snd_card_get_longname(cardIndex, &cstr_name) >= 0 && cstr_name) {
+                    sc->longName = cstr_name;
+                    // same here
+                    if (cardDeviceIndex > 0) {
+                        sc->longName += " [Device " + std::to_string(cardDeviceIndex) + "]";
+                    }
                 }
+
+                free(cstr_name);
+
+                // probe for supported sample rates and buffer sizes
+                std::set<unsigned int> sampleRates;
+                std::set<unsigned int> bufferSizes;
+
+
+                snd_pcm_t* pcm = nullptr;
+
+                if (snd_pcm_open(&pcm, devName, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) == 0) {
+                    snd_pcm_hw_params_t* params = nullptr;
+
+                    if (snd_pcm_hw_params_malloc(&params) == 0) {
+                        if (snd_pcm_hw_params_any(pcm, params) == 0) {
+                            for (const auto rate : STD_SAMPLE_RATES) {
+                                if (snd_pcm_hw_params_test_rate(pcm, params, rate, 0) == 0 && !sampleRates.contains(rate)) {
+                                    sampleRates.insert(rate);
+                                }
+                            }
+
+                            for (const auto bs : STD_BUFFER_SIZES()) {
+                                if (snd_pcm_hw_params_test_buffer_size(pcm, params, bs) == 0) {
+                                    bufferSizes.insert(bs);
+                                }
+                            }
+                        }
+                    }
+
+                    if (params) {
+                        snd_pcm_hw_params_free(params);
+                        params = nullptr;
+                    }
+                }
+
+                if (pcm) {
+                    snd_pcm_close(pcm);
+                    pcm = nullptr;
+                }
+
+                sc->supportedSampleRates.assign(sampleRates.begin(), sampleRates.end());
+                sc->supportedBufferSizes.assign(bufferSizes.begin(), bufferSizes.end());
+
+                scs->push_back(std::move(sc));
             }
 
-            if (pcm) {
-                snd_pcm_close(pcm);
-                pcm = nullptr;
-            }
-
-            sc->supportedSampleRates.assign(sampleRates.begin(), sampleRates.end());
-            sc->supportedBufferSizes.assign(bufferSizes.begin(), bufferSizes.end());
-
-            scs->push_back(std::move(sc));
             snd_ctl_close(cardHandle);
         }
 
@@ -134,21 +155,50 @@ namespace AudioAPI {
         return out;
     }
 
-    // TODO: Implement it
-    std::vector<int> mapSharedBufferSizes(const std::unique_ptr<Soundcards>& soundcards) {
-        return {};
+    std::vector<int> mapSharedBufferSizes(const std::unique_ptr<audioDevices>& audioDevices) {
+        if (audioDevices->empty()) {
+            return {};
+        }
+
+        // set the buffer sizes from first device
+        std::set<int> shared(audioDevices->front()->supportedBufferSizes.begin(), audioDevices->front()->supportedBufferSizes.end());
+
+        // intersect with each subsequent device's buffer sizes
+        for (unsigned i = 1; i < audioDevices->size(); i++) {
+            std::set<int> current(audioDevices->at(i)->supportedBufferSizes.begin(), audioDevices->at(i)->supportedBufferSizes.end());
+
+            std::set<int> intersection;
+            std::ranges::set_intersection(shared, current, std::inserter(intersection, intersection.begin()));
+
+            shared = std::move(intersection);
+
+            // no common buffer sizes
+            if (shared.empty()) {
+                return {};
+            }
+        }
+
+        return std::vector<int>(shared.begin(), shared.end());
     }
 
-    // TODO: Implement it
-    std::vector<int> mapSharedSampleRates(const std::unique_ptr<Soundcards>& soundcards) {
-        return {};
+    std::vector<int> mapSharedSampleRates(const std::unique_ptr<audioDevices>& audioDevices) {
+        std::set<int> shared;
+
+        for (const auto &adev : *audioDevices) {
+            shared.insert(adev->supportedSampleRates.begin(), adev->supportedSampleRates.end());
+        }
+
+        std::vector<int> setToVec(shared.begin(), shared.end());
+        std::ranges::sort(setToVec);
+
+        return setToVec;
     }
 
-    std::vector<int> getAllCardsSupportedSampleRates(const std::unique_ptr<Soundcards>& soundcards) {
+    std::vector<int> getAllCardsSupportedSampleRates(const std::unique_ptr<audioDevices>& audioDevices) {
         std::set<int> set;
 
-        for (auto &card : *soundcards) {
-            for (auto val : card->supportedSampleRates) {
+        for (auto &adev : *audioDevices) {
+            for (auto val : adev->supportedSampleRates) {
                 if (!set.contains(val)) set.insert(val);
             }
         }
@@ -156,11 +206,11 @@ namespace AudioAPI {
         return std::vector<int>(set.begin(), set.end());
     }
 
-    std::vector<int> getAllCardsSupportedBufferSizes(const std::unique_ptr<Soundcards>& soundcards) {
+    std::vector<int> getAllCardsSupportedBufferSizes(const std::unique_ptr<audioDevices>& audioDevices) {
         std::set<int> set;
 
-        for (auto &card : *soundcards) {
-            for (auto val : card->supportedBufferSizes) {
+        for (auto &adev : *audioDevices) {
+            for (auto val : adev->supportedBufferSizes) {
                 if (!set.contains(val)) set.insert(val);
             }
         }

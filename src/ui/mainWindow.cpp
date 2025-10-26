@@ -13,7 +13,7 @@
 
 namespace userInterface {
     MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
-        soundcards = AudioAPI::getAvailableSoundcards();
+        adevs = AudioAPI::getAvailableAudioDevices();
 
         this->setFixedSize(500, 375); // height is 400 if you want to add a statusbar
         this->setWindowTitle(QString(appStrings::appNameWithVersion().data()));
@@ -114,7 +114,7 @@ namespace userInterface {
         comboBox_SampleRate -> setObjectName("Sample Rate combo box");
         comboBox_SampleRate -> setGeometry(100, 120, 100, 32);
         comboBox_SampleRate -> setMaxVisibleItems(5);
-        for (const auto sc : AudioAPI::getAllCardsSupportedSampleRates(soundcards)) {
+        for (const auto sc : AudioAPI::getAllCardsSupportedSampleRates(adevs)) {
             comboBox_SampleRate -> addItem(QString::fromStdString(std::to_string(sc)));
         }
         QObject::connect(comboBox_SampleRate, &QComboBox::currentIndexChanged, []() -> void {
@@ -125,7 +125,7 @@ namespace userInterface {
         comboBox_BufferSize -> setObjectName("Buffer Size combo box");
         comboBox_BufferSize -> setGeometry(300, 120, 100, 32);
         comboBox_BufferSize -> setMaxVisibleItems(5);
-        for (const auto sc : AudioAPI::getAllCardsSupportedBufferSizes(soundcards)) {
+        for (const auto sc : AudioAPI::getAllCardsSupportedBufferSizes(adevs)) {
             comboBox_BufferSize -> addItem(QString::fromStdString(std::to_string(sc)));
         }
         QObject::connect(comboBox_BufferSize, &QComboBox::currentIndexChanged, []() -> void {
