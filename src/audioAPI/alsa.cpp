@@ -157,7 +157,7 @@ namespace AudioAPI {
 
     std::vector<int> mapSharedBufferSizes(const std::unique_ptr<audioDevices>& audioDevices) {
         if (audioDevices->empty()) {
-            return {};
+            return { 0, 512, 1024 };
         }
 
         // set the buffer sizes from first device
@@ -182,7 +182,11 @@ namespace AudioAPI {
     }
 
     std::vector<int> mapSharedSampleRates(const std::unique_ptr<audioDevices>& audioDevices) {
-        std::set<int> shared;
+        if (audioDevices->empty()) {
+            return { 0, 44100, 48000 };
+        }
+
+        std::set<int> shared = {0};
 
         for (const auto &adev : *audioDevices) {
             shared.insert(adev->supportedSampleRates.begin(), adev->supportedSampleRates.end());
@@ -195,7 +199,11 @@ namespace AudioAPI {
     }
 
     std::vector<int> getAllCardsSupportedSampleRates(const std::unique_ptr<audioDevices>& audioDevices) {
-        std::set<int> set;
+        if (audioDevices->empty()) {
+            return { 0, 44100, 48000 };
+        }
+
+        std::set<int> set = {0};
 
         for (auto &adev : *audioDevices) {
             for (auto val : adev->supportedSampleRates) {
@@ -207,7 +215,11 @@ namespace AudioAPI {
     }
 
     std::vector<int> getAllCardsSupportedBufferSizes(const std::unique_ptr<audioDevices>& audioDevices) {
-        std::set<int> set;
+        if (audioDevices->empty()) {
+            return { 0, 512, 1024 };
+        }
+
+        std::set<int> set = {0};
 
         for (auto &adev : *audioDevices) {
             for (auto val : adev->supportedBufferSizes) {
