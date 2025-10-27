@@ -69,8 +69,16 @@ namespace userInterface {
         action_Reload -> setObjectName(QAnyStringView("Apply action"));
         action_Reload -> setText("Reload");
         action_Reload -> setShortcut(QKeySequence(Qt::CTRL|Qt::Key_R));
-        QObject::connect(action_Reload, &QAction::triggered, [=]() -> void {
-            std::cout << "action_Reload placeholder\n";
+        QObject::connect(action_Reload, &QAction::triggered, [this]() -> void {
+            this->disableUI();
+
+            this->adevs = AudioAPI::getAvailableAudioDevices();
+            this->pwConn = AudioAPI::PipewireConnection();
+
+            this->fillSampleRateComboBox();
+            this->fillBufferSizeComboBox();
+
+            this->enableUI();
         });
 
         action_Quit = new QAction();
