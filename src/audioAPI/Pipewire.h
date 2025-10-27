@@ -26,11 +26,11 @@ namespace AudioAPI {
     public:
         PipewireOption(int id, const std::string &key, const std::string &value, const std::string &type);
 
-        int getId();
-        std::string getKey();
-        std::string getValue();
-        std::string getType();
-        int setValue(const std::string &value);
+        int getId() const;
+        std::string getKey() const;
+        std::string getValue() const;
+        std::string getType() const;
+        int setValue(const char* value = nullptr, const char* type = nullptr);
     };
 
     std::vector<std::string> pwOptClockAllowedRatesToStringArr(std::string s);
@@ -54,8 +54,9 @@ namespace AudioAPI {
         PipewireConnection();
         ~PipewireConnection() = default;
 
-        PipewireOption getOption(const std::string& key) const;
+        [[nodiscard]] PipewireOption getOption(const std::string& key) const;
         void updateAllOpts();
+        void resetOptsToDefault() const;
     };
 }
 

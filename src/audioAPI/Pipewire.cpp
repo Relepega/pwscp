@@ -5,6 +5,7 @@
 
 #include "Pipewire.h"
 
+#include "alsa.h"
 #include "src/utils/utils.h"
 
 namespace AudioAPI {
@@ -15,18 +16,25 @@ namespace AudioAPI {
          this->type = type;
      }
 
-    int PipewireOption::getId() { return this->id; }
-    std::string PipewireOption::getKey() { return this->key; }
-    std::string PipewireOption::getValue() { return this->value; }
-    std::string PipewireOption::getType() { return this->type; }
+    int PipewireOption::getId() const { return this->id; }
+    std::string PipewireOption::getKey() const { return this->key; }
+    std::string PipewireOption::getValue() const { return this->value; }
+    std::string PipewireOption::getType() const { return this->type; }
 
-    int PipewireOption::setValue(const std::string& value) {
-         auto cmdResult = utils::runSystemCommand("pw-metadata -n settings 0 " + key + " " + value);
+    int PipewireOption::setValue(const char* value, const char* type) {
+        const std::string v = value ? value : this->value;
+        const std::string t = type ? type : this->type;
+
+         char cmd[512];
+         sprintf(cmd, "pw-metadata -n settings 0 %s '%s' '%s'", this->key.c_str(), v.c_str(), t.c_str());
+
+         auto cmdResult = utils::runSystemCommand(cmd);
          if (cmdResult->isError) {
              return -1;
          }
 
-         this->value = value;
+         this->value = v;
+         this->type = t;
 
          return 0;
     }
@@ -210,4 +218,24 @@ namespace AudioAPI {
              // std::cout << "\n\n";
          }
     }
+
+    void PipewireConnection::resetOptsToDefault() const {
+         std::string allowedRates = "[ ";
+
+         for (const auto sr : STD_SAMPLE_RATES) {
+             allowedRates.append(std::to_string(sr) + ", ");
+         }
+
+         allowedRates = allowedRates.substr(0, allowedRates.length()-2);
+         allowedRates.append(" ]");
+
+         this->getOption(PW_OPT_LOG_LEVEL).setValue("2", "");
+         this->getOption(PW_OPT_CLOCK_RATE).setValue("48000", "");
+         this->getOption(PW_OPT_CLOCK_ALLOWED_RATES).setValue(allowedRates.c_str(), "");
+         this->getOption(PW_OPT_CLOCK_QUANTUM).setValue("2048", "");
+         this->getOption(PW_OPT_CLOCK_MIN_QUANTUM).setValue("32", "");
+         this->getOption(PW_OPT_CLOCK_MAX_QUANTUM).setValue("8192", "");
+         this->getOption(PW_OPT_CLOCK_FORCE_QUANTUM).setValue("0", "");
+         this->getOption(PW_OPT_CLOCK_FORCE_RATE).setValue("0", "");
+     }
 }
