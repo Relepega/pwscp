@@ -217,20 +217,22 @@ namespace userInterface {
 
     MainWindow::~MainWindow() = default;
 
-    void MainWindow::fillSampleRateComboBox() const {
+    void MainWindow::fillSampleRateComboBox() {
         comboBox_SampleRate -> clear();
+        this->sampleRates = AudioAPI::getAllCardsSupportedSampleRates(adevs);
 
-        for (const auto sc : AudioAPI::getAllCardsSupportedSampleRates(adevs)) {
+        for (const auto sc : this->sampleRates) {
             comboBox_SampleRate -> addItem(QString::fromStdString(std::to_string(sc)));
         }
 
         comboBox_SampleRate -> setCurrentIndex(this->currSampleRateIndex());
     }
 
-    void MainWindow::fillBufferSizeComboBox() const {
+    void MainWindow::fillBufferSizeComboBox() {
         comboBox_BufferSize -> clear();
+        this->bufferSizes = AudioAPI::mapSharedBufferSizes(adevs);
 
-        for (const auto sc : AudioAPI::getAllCardsSupportedBufferSizes(adevs)) {
+        for (const auto sc : this->bufferSizes) {
             if (sc == 0 || (
                         sc >= std::stoi(pwConn.getOption(AudioAPI::PW_OPT_CLOCK_MIN_QUANTUM).getValue()) &&
                         sc <= std::stoi(pwConn.getOption(AudioAPI::PW_OPT_CLOCK_MAX_QUANTUM).getValue())
@@ -292,7 +294,7 @@ namespace userInterface {
     }
 
     int MainWindow::currSampleRateIndex() const {
-        const std::vector<std::string> shared = AudioAPI::vectorValuesToStringsVec(AudioAPI::mapSharedSampleRates(this->adevs));
+        const std::vector<std::string> shared = AudioAPI::vectorValuesToStringsVec(this->sampleRates);
 
         const std::string rate = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).getValue();
         const std::string forcedRate = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).getValue();
@@ -318,7 +320,7 @@ namespace userInterface {
     }
 
     int MainWindow::currBufferSizeIndex() const {
-        const std::vector<std::string> shared = AudioAPI::vectorValuesToStringsVec(AudioAPI::mapSharedBufferSizes(this->adevs));
+        const std::vector<std::string> shared = AudioAPI::vectorValuesToStringsVec(this->bufferSizes);
 
         const std::string buffer = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).getValue();
         const std::string forcedBuffer = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).getValue();
@@ -326,7 +328,7 @@ namespace userInterface {
         // search for active
         for (size_t i = 0; i < shared.size(); i++) {
             if (shared[i] == buffer || (forcedBuffer != "0" && shared[i] == forcedBuffer)) {
-                return i+1;
+                return i;
             }
         }
 
@@ -335,12 +337,12 @@ namespace userInterface {
         // search for default index
         for (size_t i = 0; i < shared.size(); i++) {
             if (shared[i] == defaultBS) {
-                return i+1;
+                return i;
             }
         }
 
         // if the default is not in the shared sample rates then use the first element in list
-        return 1;
+        return 0;
     }
 
     void MainWindow::closeEvent(QCloseEvent* event) {

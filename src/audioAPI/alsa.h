@@ -30,8 +30,8 @@ namespace AudioAPI {
     std::string vectorValuesToString(const std::vector<int>& vec);
     std::vector<std::string> vectorValuesToStringsVec(const std::vector<int>& vec);
 
-    std::vector<int> mapSharedBufferSizes(const std::unique_ptr<audioDevices>& soundcards);
-    std::vector<int> mapSharedSampleRates(const std::unique_ptr<audioDevices>& soundcards);
+    std::vector<int> mapSharedBufferSizes(const std::unique_ptr<audioDevices>& audioDevices);
+    std::vector<int> mapSharedSampleRates(const std::unique_ptr<audioDevices>& audioDevices);
 
     std::vector<int> getAllCardsSupportedSampleRates(const std::unique_ptr<audioDevices>& audioDevices);
     std::vector<int> getAllCardsSupportedBufferSizes(const std::unique_ptr<audioDevices>& audioDevices);

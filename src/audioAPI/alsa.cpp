@@ -161,7 +161,8 @@ namespace AudioAPI {
         }
 
         // set the buffer sizes from first device
-        std::set<int> shared(audioDevices->front()->supportedBufferSizes.begin(), audioDevices->front()->supportedBufferSizes.end());
+        std::set<int> shared = {0};
+        shared.insert(audioDevices->front()->supportedBufferSizes.begin(), audioDevices->front()->supportedBufferSizes.end());
 
         // intersect with each subsequent device's buffer sizes
         for (unsigned i = 1; i < audioDevices->size(); i++) {

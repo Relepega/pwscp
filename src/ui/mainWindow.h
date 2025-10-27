@@ -40,7 +40,9 @@ namespace userInterface {
         QLabel* label_BufferSize;
 
         QComboBox* comboBox_SampleRate;
+        std::vector<int> sampleRates;
         QComboBox* comboBox_BufferSize;
+        std::vector<int> bufferSizes;
 
         QGroupBox*    groupBox_SampleRate;
         QRadioButton* sampleRate_Suggest;
@@ -74,8 +76,8 @@ private slots:
         ~MainWindow() override;
         void disableUI() const;
         void enableUI() const;
-        void fillSampleRateComboBox() const;
-        void fillBufferSizeComboBox() const;
+        void fillSampleRateComboBox();
+        void fillBufferSizeComboBox();
 
         int currSampleRateIndex() const;
         int currBufferSizeIndex() const;
