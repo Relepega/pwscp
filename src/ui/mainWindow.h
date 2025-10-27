@@ -49,12 +49,10 @@ namespace userInterface {
         QGroupBox*    groupBox_SampleRate;
         QRadioButton* sampleRate_Suggest;
         QRadioButton* sampleRate_Force;
-        QRadioButton* sampleRate_SuggestAndForce;
 
         QGroupBox*    groupBox_BufferSize;
         QRadioButton* bufferSize_Suggest;
         QRadioButton* bufferSize_Force;
-        QRadioButton* bufferSize_SuggestAndForce;
 
         QPushButton* button_Reset;
         QPushButton* button_Apply;
@@ -79,7 +77,7 @@ private slots:
         void disableUI() const;
         void enableUI() const;
         void comboboxChanged() const;
-        void applyChanges() const;
+        void applyChanges();
         void fillSampleRateComboBox();
         void fillBufferSizeComboBox();
 

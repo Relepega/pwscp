@@ -162,12 +162,6 @@ namespace userInterface {
         sampleRate_Force -> setText("Force");
         sampleRate_Force -> setChecked(false);
 
-        sampleRate_SuggestAndForce = new QRadioButton(groupBox_SampleRate);
-        sampleRate_SuggestAndForce -> setObjectName("Suggest and Force Sample Rate");
-        sampleRate_SuggestAndForce -> setGeometry(5, 65, 137, 23);
-        sampleRate_SuggestAndForce -> setText("Suggest and Force");
-        sampleRate_SuggestAndForce -> setChecked(false);
-
         groupBox_BufferSize = new QGroupBox(centralWidget);
         groupBox_BufferSize -> setGeometry(295, 165, 155, 95);
         groupBox_BufferSize -> setFlat(true);
@@ -184,12 +178,6 @@ namespace userInterface {
         bufferSize_Force -> setText("Force");
         bufferSize_Force -> setChecked(false);
 
-        bufferSize_SuggestAndForce = new QRadioButton(groupBox_BufferSize);
-        bufferSize_SuggestAndForce -> setObjectName("Suggest and Force buffer size");
-        bufferSize_SuggestAndForce -> setGeometry(5, 65, 137, 23);
-        bufferSize_SuggestAndForce -> setText("Suggest and Force");
-        bufferSize_SuggestAndForce -> setChecked(false);
-
         // Control Buttons - Row 4
 
         button_Reset = new QPushButton("Reset button", centralWidget);
@@ -200,7 +188,12 @@ namespace userInterface {
 
             this->pwConn.resetOptsToDefault();
             this->enableUI();
-            // TODO: track new defaults, set comboboxes to them and update ui actions/buttons accordingly
+
+            this->activeSR = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).getValue();
+            this->activeBS = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).getValue();
+
+            this->comboBox_SampleRate->setCurrentIndex(this->currSampleRateIndex());
+            this->comboBox_BufferSize->setCurrentIndex(this->currBufferSizeIndex());
 
             this->button_Apply->setEnabled(false);
             this->button_Cancel->setEnabled(false);
@@ -276,11 +269,9 @@ namespace userInterface {
 
         sampleRate_Force -> setEnabled(false);
         sampleRate_Suggest -> setEnabled(false);
-        sampleRate_SuggestAndForce -> setEnabled(false);
 
         bufferSize_Force -> setEnabled(false);
         bufferSize_Suggest -> setEnabled(false);
-        bufferSize_SuggestAndForce -> setEnabled(false);
 
         button_Apply -> setEnabled(false);
         button_Cancel -> setEnabled(false);
@@ -300,11 +291,9 @@ namespace userInterface {
 
         sampleRate_Force -> setEnabled(true);
         sampleRate_Suggest -> setEnabled(true);
-        sampleRate_SuggestAndForce -> setEnabled(true);
 
         bufferSize_Force -> setEnabled(true);
         bufferSize_Suggest -> setEnabled(true);
-        bufferSize_SuggestAndForce -> setEnabled(true);
 
         button_Apply -> setEnabled(true);
         button_Cancel -> setEnabled(true);
@@ -326,31 +315,40 @@ namespace userInterface {
         }
     }
 
-    void MainWindow::applyChanges() const {
+    void MainWindow::applyChanges() {
         this->disableUI();
 
         const std::string sr = this->comboBox_SampleRate->currentText().toStdString();
         const std::string bs = this->comboBox_BufferSize->currentText().toStdString();
 
-        if (this->sampleRate_Force->isChecked()) {
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).setValue(sr.c_str());
-        } else if (this->sampleRate_Suggest->isChecked()) {
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).setValue(sr.c_str());
-        } else if (this->sampleRate_SuggestAndForce->isChecked()) {
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).setValue(sr.c_str());
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).setValue(sr.c_str());
+        if (this->sampleRate_Suggest->isChecked()) {
+            if (this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).getValue() != "0")
+                this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).setValue("0", "");
+
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).setValue(sr.c_str(), "");
+        } else if (this->sampleRate_Force->isChecked()) {
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).setValue(sr.c_str(), "");
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).setValue(sr.c_str(), "");
         }
 
-        if (this->bufferSize_Force->isChecked()) {
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).setValue(bs.c_str());
-        } else if (this->bufferSize_Suggest->isChecked()) {
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).setValue(bs.c_str());
-        } else if (this->bufferSize_SuggestAndForce->isChecked()) {
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).setValue(bs.c_str());
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).setValue(bs.c_str());
+        if (this->bufferSize_Suggest->isChecked()) {
+            if (this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).getValue() != "0")
+                this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).setValue("0", "");
+
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).setValue(bs.c_str(), "");
+        } else if (this->bufferSize_Force->isChecked()) {
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).setValue(bs.c_str(), "");
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).setValue(bs.c_str(), "");
         }
+
+        this->activeSR = sr;
+        this->activeBS = bs;
 
         this->enableUI();
+
+        this->button_Apply->setEnabled(false);
+        this->button_Cancel->setEnabled(false);
+        this->action_Apply->setEnabled(false);
     }
 
     int MainWindow::currSampleRateIndex() const {
