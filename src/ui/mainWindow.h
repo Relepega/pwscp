@@ -41,8 +41,10 @@ namespace userInterface {
 
         QComboBox* comboBox_SampleRate;
         std::vector<int> sampleRates;
+        std::string activeSR;
         QComboBox* comboBox_BufferSize;
         std::vector<int> bufferSizes;
+        std::string activeBS;
 
         QGroupBox*    groupBox_SampleRate;
         QRadioButton* sampleRate_Suggest;
@@ -59,7 +61,7 @@ namespace userInterface {
         QPushButton* button_Cancel;
 
         bool trueCloseSignal = false;
-        std::unique_ptr<AudioAPI::audioDevices> adevs;
+        AudioAPI::audioDevices adevs;
         AudioAPI::PipewireConnection pwConn;
 
     protected:
@@ -76,6 +78,8 @@ private slots:
         ~MainWindow() override;
         void disableUI() const;
         void enableUI() const;
+        void comboboxChanged() const;
+        void applyChanges() const;
         void fillSampleRateComboBox();
         void fillBufferSizeComboBox();
 

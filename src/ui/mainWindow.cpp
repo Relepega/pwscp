@@ -13,8 +13,16 @@
 
 namespace userInterface {
     MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
-        adevs = AudioAPI::getAvailableAudioDevices();
-        pwConn = AudioAPI::PipewireConnection();
+        this->adevs = AudioAPI::getAvailableAudioDevices();
+        this->pwConn = AudioAPI::PipewireConnection();
+
+        this->activeSR = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).getValue() != "0" ?
+                            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).getValue() :
+                            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).getValue();
+
+        this->activeBS = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).getValue() != "0" ?
+                            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).getValue() :
+                            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).getValue();
 
         this->setFixedSize(500, 375); // height is 400 if you want to add a statusbar
         this->setWindowTitle(QString(appStrings::appNameWithVersion().data()));
@@ -61,19 +69,21 @@ namespace userInterface {
         action_Apply -> setText("Apply");
         action_Apply -> setShortcut(QKeySequence(Qt::CTRL|Qt::Key_S));
         action_Apply -> setEnabled(false);
-        QObject::connect(action_Apply, &QAction::triggered, this, [=]() -> void {
-            std::cout << "action_Apply placeholder\n";
-        });
+        QObject::connect(action_Apply, &QAction::triggered, this, [this]() -> void { this->applyChanges(); });
 
         action_Reload = new QAction();
-        action_Reload -> setObjectName(QAnyStringView("Apply action"));
+        action_Reload -> setObjectName(QAnyStringView("Reload action"));
         action_Reload -> setText("Reload");
         action_Reload -> setShortcut(QKeySequence(Qt::CTRL|Qt::Key_R));
         QObject::connect(action_Reload, &QAction::triggered, [this]() -> void {
             this->disableUI();
 
+            // free(this->adevs.release());
+            // this->adevs = AudioAPI::getAvailableAudioDevices();
             this->adevs = AudioAPI::getAvailableAudioDevices();
             this->pwConn = AudioAPI::PipewireConnection();
+
+            // pwConn.updateAllOpts();
 
             this->fillSampleRateComboBox();
             this->fillBufferSizeComboBox();
@@ -82,7 +92,7 @@ namespace userInterface {
         });
 
         action_Quit = new QAction();
-        action_Quit -> setObjectName(QAnyStringView("Apply action"));
+        action_Quit -> setObjectName(QAnyStringView("Quit action"));
         action_Quit -> setText("Quit");
         action_Quit -> setShortcut(QKeySequence(Qt::CTRL|Qt::Key_Q));
         QObject::connect(action_Quit, &QAction::triggered, [this]() -> void {
@@ -125,18 +135,14 @@ namespace userInterface {
         comboBox_SampleRate -> setGeometry(100, 120, 100, 32);
         comboBox_SampleRate -> setMaxVisibleItems(5);
         fillSampleRateComboBox();
-        QObject::connect(comboBox_SampleRate, &QComboBox::currentIndexChanged, []() -> void {
-            std::cout << "combobox sample rate index changed placeholder\n";
-        });
+        QObject::connect(comboBox_SampleRate, &QComboBox::currentIndexChanged, [this]() -> void { this->comboboxChanged(); });
 
         comboBox_BufferSize = new QComboBox(centralWidget);
         comboBox_BufferSize -> setObjectName("Buffer Size combo box");
         comboBox_BufferSize -> setGeometry(300, 120, 100, 32);
         comboBox_BufferSize -> setMaxVisibleItems(5);
         fillBufferSizeComboBox();
-        QObject::connect(comboBox_BufferSize, &QComboBox::currentIndexChanged, []() -> void {
-            std::cout << "combobox buffer size index changed placeholder\n";
-        });
+        QObject::connect(comboBox_BufferSize, &QComboBox::currentIndexChanged, [this]() -> void { this->comboboxChanged(); });
 
         // Operation Mode - Row 3
 
@@ -189,30 +195,34 @@ namespace userInterface {
         button_Reset = new QPushButton("Reset button", centralWidget);
         button_Reset -> setGeometry(154, 297, 140, 34);
         button_Reset -> setText("Reset to Default");
-        QObject::connect(button_Reset, &QPushButton::pressed, [=]() {
-            std::cout << "Reset button onPressed placeholder\n";
-        });
-
-        button_Apply = new QPushButton("Reset button", centralWidget);
-        button_Apply -> setGeometry(304, 297, 88, 34);
-        button_Apply -> setText("Apply");
-        QObject::connect(button_Apply, &QPushButton::pressed, [this]() {
+        QObject::connect(button_Reset, &QPushButton::pressed, [this]() ->void {
             this->disableUI();
 
-            pwConn.updateAllOpts();
-
-            adevs.release();
-            adevs = AudioAPI::getAvailableAudioDevices();
-
+            this->pwConn.resetOptsToDefault();
             this->enableUI();
+            // TODO: track new defaults, set comboboxes to them and update ui actions/buttons accordingly
+
+            this->button_Apply->setEnabled(false);
+            this->button_Cancel->setEnabled(false);
+            this->action_Apply->setEnabled(false);
         });
+
+        button_Apply = new QPushButton("Apply button", centralWidget);
+        button_Apply -> setGeometry(304, 297, 88, 34);
+        button_Apply -> setText("Apply");
+        QObject::connect(button_Apply, &QPushButton::pressed, [this]() -> void { this->applyChanges(); });
         button_Apply -> setEnabled(false);
 
-        button_Cancel = new QPushButton("Reset button", centralWidget);
+        button_Cancel = new QPushButton("Cancel button", centralWidget);
         button_Cancel -> setGeometry(402, 297, 88, 34);
         button_Cancel -> setText("Cancel");
-        QObject::connect(button_Cancel, &QPushButton::pressed, [=]() {
-            std::cout << "Reset button onPressed placeholder\n";
+        QObject::connect(button_Cancel, &QPushButton::pressed, [this]() -> void {
+            this->disableUI();
+
+            this->comboBox_SampleRate->setCurrentIndex(this->currSampleRateIndex());
+            this->comboBox_SampleRate->setCurrentIndex(this->currBufferSizeIndex());
+
+            this->enableUI();
         });
         button_Cancel -> setEnabled(false);
 
@@ -238,7 +248,7 @@ namespace userInterface {
 
     void MainWindow::fillBufferSizeComboBox() {
         comboBox_BufferSize -> clear();
-        this->bufferSizes = AudioAPI::mapSharedBufferSizes(adevs);
+        this->bufferSizes = AudioAPI::mapSharedBufferSizes(this->adevs);
 
         for (const auto sc : this->bufferSizes) {
             if (sc == 0 || (
@@ -301,20 +311,58 @@ namespace userInterface {
         button_Reset -> setEnabled(true);
     }
 
+    void MainWindow::comboboxChanged() const {
+        const std::string sr = this->comboBox_SampleRate->currentText().toStdString();
+        const std::string bs = this->comboBox_BufferSize->currentText().toStdString();
+
+        if (sr != this->activeSR || bs != this->activeBS) {
+            this->button_Apply->setEnabled(true);
+            this->button_Cancel->setEnabled(true);
+            this->action_Apply->setEnabled(true);
+        } else {
+            this->button_Apply->setEnabled(false);
+            this->button_Cancel->setEnabled(false);
+            this->action_Apply->setEnabled(false);
+        }
+    }
+
+    void MainWindow::applyChanges() const {
+        this->disableUI();
+
+        const std::string sr = this->comboBox_SampleRate->currentText().toStdString();
+        const std::string bs = this->comboBox_BufferSize->currentText().toStdString();
+
+        if (this->sampleRate_Force->isChecked()) {
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).setValue(sr.c_str());
+        } else if (this->sampleRate_Suggest->isChecked()) {
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).setValue(sr.c_str());
+        } else if (this->sampleRate_SuggestAndForce->isChecked()) {
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).setValue(sr.c_str());
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).setValue(sr.c_str());
+        }
+
+        if (this->bufferSize_Force->isChecked()) {
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).setValue(bs.c_str());
+        } else if (this->bufferSize_Suggest->isChecked()) {
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).setValue(bs.c_str());
+        } else if (this->bufferSize_SuggestAndForce->isChecked()) {
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).setValue(bs.c_str());
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).setValue(bs.c_str());
+        }
+
+        this->enableUI();
+    }
+
     int MainWindow::currSampleRateIndex() const {
         const std::vector<std::string> shared = AudioAPI::vectorValuesToStringsVec(this->sampleRates);
-
-        const std::string rate = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).getValue();
-        const std::string forcedRate = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).getValue();
+        const std::string defaultSR = std::to_string(AudioAPI::DEFAULT_SAMPLE_RATE);
 
         // search for active
         for (size_t i = 0; i < shared.size(); i++) {
-            if (shared[i] == rate || (forcedRate != "0" && shared[i] == forcedRate)) {
+            if (shared[i] == this->activeSR) {
                 return i;
             }
         }
-
-        const std::string defaultSR = std::to_string(AudioAPI::DEFAULT_SAMPLE_RATE);
 
         // search for default index
         for (size_t i = 0; i < shared.size(); i++) {
@@ -329,18 +377,14 @@ namespace userInterface {
 
     int MainWindow::currBufferSizeIndex() const {
         const std::vector<std::string> shared = AudioAPI::vectorValuesToStringsVec(this->bufferSizes);
-
-        const std::string buffer = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).getValue();
-        const std::string forcedBuffer = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).getValue();
+        const std::string defaultBS = std::to_string(AudioAPI::DEFUALT_BUFFER_SIZE);
 
         // search for active
         for (size_t i = 0; i < shared.size(); i++) {
-            if (shared[i] == buffer || (forcedBuffer != "0" && shared[i] == forcedBuffer)) {
+            if (shared[i] == this->activeBS) {
                 return i;
             }
         }
-
-        const std::string defaultBS = std::to_string(AudioAPI::DEFUALT_BUFFER_SIZE);
 
         // search for default index
         for (size_t i = 0; i < shared.size(); i++) {
