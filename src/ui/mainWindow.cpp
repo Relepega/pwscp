@@ -187,7 +187,6 @@ namespace userInterface {
             this->disableUI();
 
             this->pwConn.resetOptsToDefault();
-            this->enableUI();
 
             this->activeSR = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).getValue();
             this->activeBS = this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).getValue();
@@ -195,9 +194,7 @@ namespace userInterface {
             this->comboBox_SampleRate->setCurrentIndex(this->currSampleRateIndex());
             this->comboBox_BufferSize->setCurrentIndex(this->currBufferSizeIndex());
 
-            this->button_Apply->setEnabled(false);
-            this->button_Cancel->setEnabled(false);
-            this->action_Apply->setEnabled(false);
+            this->enableUI(true);
         });
 
         button_Apply = new QPushButton("Apply button", centralWidget);
@@ -215,7 +212,7 @@ namespace userInterface {
             this->comboBox_SampleRate->setCurrentIndex(this->currSampleRateIndex());
             this->comboBox_SampleRate->setCurrentIndex(this->currBufferSizeIndex());
 
-            this->enableUI();
+            this->enableUI(true);
         });
         button_Cancel -> setEnabled(false);
 
@@ -278,11 +275,11 @@ namespace userInterface {
         button_Reset -> setEnabled(false);
     }
 
-    void MainWindow::enableUI() const {
+    void MainWindow::enableUI(const bool keepActionsDisabled) const {
         tray_Quit -> setEnabled(true);
         tray_Restore -> setEnabled(true);
 
-        action_Apply -> setEnabled(true);
+        if (!keepActionsDisabled) action_Apply -> setEnabled(true);
         action_Quit -> setEnabled(true);
         action_Reload -> setEnabled(true);
 
@@ -295,8 +292,8 @@ namespace userInterface {
         bufferSize_Force -> setEnabled(true);
         bufferSize_Suggest -> setEnabled(true);
 
-        button_Apply -> setEnabled(true);
-        button_Cancel -> setEnabled(true);
+        if (!keepActionsDisabled) button_Apply -> setEnabled(true);
+        if (!keepActionsDisabled) button_Cancel -> setEnabled(true);
         button_Reset -> setEnabled(true);
     }
 
@@ -344,7 +341,7 @@ namespace userInterface {
         this->activeSR = sr;
         this->activeBS = bs;
 
-        this->enableUI();
+        this->enableUI(true);
 
         this->button_Apply->setEnabled(false);
         this->button_Cancel->setEnabled(false);

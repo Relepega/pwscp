@@ -75,7 +75,7 @@ private slots:
         explicit MainWindow(QWidget* parent = nullptr);
         ~MainWindow() override;
         void disableUI() const;
-        void enableUI() const;
+        void enableUI(bool keepActionsDisabled = false) const;
         void comboboxChanged() const;
         void applyChanges();
         void fillSampleRateComboBox();
