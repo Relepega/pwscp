@@ -118,15 +118,15 @@ namespace userInterface {
         label_Title = new QLabel(appStrings::APP_NAME.data(), centralWidget);
         label_Title -> setObjectName("App title label");
         label_Title -> setFont(typo::TitleFont);
-        label_Title -> setGeometry(94, 10, 312, 29);
+        label_Title -> setGeometry(94, 10, 320, 35);
 
         label_SampleRate = new QLabel("Sample Rate label", centralWidget);
         label_SampleRate -> setText("Sample Rate");
-        label_SampleRate -> setGeometry(114, 70, 78, 18);
+        label_SampleRate -> setGeometry(114, 70, 85, 25);
 
         label_BufferSize = new QLabel("Buffer Size label", centralWidget);
         label_BufferSize -> setText("Buffer Size");
-        label_BufferSize -> setGeometry(318, 70, 68, 18);
+        label_BufferSize -> setGeometry(318, 70, 75, 25);
 
         // ComboBox - Row 2
 

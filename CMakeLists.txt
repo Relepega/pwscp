@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 3.16)
 project(pwscp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -9,14 +9,16 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-#set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static")
-
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
+
+# include standard install paths
+include(GNUInstallDirs)
 
 find_package(Qt6 COMPONENTS
              Core
              Gui
              Widgets
+             DBus
              REQUIRED)
 
 find_package(ALSA REQUIRED)
@@ -47,10 +49,11 @@ add_executable(${PROJECT_NAME} src/main.cpp
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${ALSA_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME} PRIVATE
                       Qt::Core
                       Qt::Gui
                       Qt::Widgets
+                      Qt::DBus
                       ALSA::ALSA
                       ${PIPEWIRE_LIBRARIES}
 )
