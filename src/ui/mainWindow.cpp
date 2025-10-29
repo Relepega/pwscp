@@ -381,13 +381,6 @@ namespace userInterface {
             }
         }
 
-        // search for default index
-        for (size_t i = 0; i < shared.size(); i++) {
-            if (shared[i] == defaultBS) {
-                return i;
-            }
-        }
-
         // if the default is not in the shared sample rates then use the first element in list
         return 0;
     }
