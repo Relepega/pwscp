@@ -19,6 +19,7 @@ find_package(Qt6 COMPONENTS
              Gui
              Widgets
              DBus
+             QuickControls2
              REQUIRED)
 
 find_package(ALSA REQUIRED)
@@ -54,6 +55,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
                       Qt::Gui
                       Qt::Widgets
                       Qt::DBus
+                      Qt::QuickControls2
                       ALSA::ALSA
                       ${PIPEWIRE_LIBRARIES}
 )

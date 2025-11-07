@@ -13,6 +13,11 @@ enough to be a 3-click solution.
 
 This utility aims to solve the issue and let even non-experts "get the job done".
 
+# Requisites
+
+To make the app look usable, you need to install the `breeze breeze5 breeze-gtk` packages.
+
+If the app still looks bad on gnome, just know I gave up on this.
 
 # Usage
 
