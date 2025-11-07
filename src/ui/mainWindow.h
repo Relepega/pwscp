@@ -68,7 +68,6 @@ private slots:
         ~MainWindow() override;
         void disableUI() const;
         void enableUI(bool keepActionsDisabled = false) const;
-        void comboboxChanged();
         void applyChanges();
         void fillSampleRateComboBox();
         void fillBufferSizeComboBox();

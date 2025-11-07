@@ -100,7 +100,7 @@ namespace AudioAPI {
          // std::cout << metadataString;
 
          // std::cout << "metadata string length: " << cmdResult->combinedOutput.length() << " chars\n";
-         std::string line = "";
+         std::string line;
          std::vector<std::string> lines;
 
          for (unsigned i = 0; i < cmdResult->combinedOutput.length(); i++) {
@@ -120,8 +120,7 @@ namespace AudioAPI {
          unsigned l = start;
          unsigned r = l;
 
-         std::string k = "";
-         std::string v = "";
+         std::string k, v;
 
          while (r < metadataLine.length()) {
              char currChar = metadataLine[r];

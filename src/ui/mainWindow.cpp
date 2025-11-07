@@ -24,7 +24,7 @@ namespace userInterface {
                             this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).getValue() :
                             this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).getValue();
 
-        this->setFixedSize(500, 315); // height is +25 if you want to add a statusbar
+        this->setFixedSize(500, 325); // height is +25 if you want to add a statusbar
         this->setWindowTitle(QString(appStrings::appNameWithVersion().data()));
 
         /*
@@ -127,14 +127,14 @@ namespace userInterface {
         comboBox_SampleRate -> setGeometry(100, 120, 100, 32);
         comboBox_SampleRate -> setMaxVisibleItems(5);
         fillSampleRateComboBox();
-        QObject::connect(comboBox_SampleRate, &QComboBox::currentIndexChanged, [this]() -> void { this->comboboxChanged(); });
+        QObject::connect(comboBox_SampleRate, &QComboBox::currentIndexChanged, [this]() -> void { this->applyChanges(); });
 
         comboBox_BufferSize = new QComboBox(centralWidget);
         comboBox_BufferSize -> setObjectName("Buffer Size combo box");
         comboBox_BufferSize -> setGeometry(300, 120, 100, 32);
         comboBox_BufferSize -> setMaxVisibleItems(5);
         fillBufferSizeComboBox();
-        QObject::connect(comboBox_BufferSize, &QComboBox::currentIndexChanged, [this]() -> void { this->comboboxChanged(); });
+        QObject::connect(comboBox_BufferSize, &QComboBox::currentIndexChanged, [this]() -> void { this->applyChanges(); });
 
         // Operation Mode - Row 3
 
@@ -154,7 +154,7 @@ namespace userInterface {
         // Control Buttons - Row 4
 
         button_Reset = new QPushButton("Reset button", centralWidget);
-        button_Reset -> setGeometry(10, 240, 140, 34);
+        button_Reset -> setGeometry(10, 250, 140, 34);
         button_Reset -> setText("Reset to Default");
         QObject::connect(button_Reset, &QPushButton::pressed, [this]() ->void {
             this->disableUI();
@@ -236,11 +236,6 @@ namespace userInterface {
         forceOptions -> setEnabled(true);
 
         button_Reset -> setEnabled(true);
-    }
-
-    void MainWindow::comboboxChanged() {
-        std::cout << "changed\n";
-        this->applyChanges();
     }
 
     void MainWindow::applyChanges() {
