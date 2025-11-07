@@ -20,6 +20,10 @@ namespace AudioAPI {
     std::string PipewireOption::getKey() const { return this->key; }
     std::string PipewireOption::getValue() const { return this->value; }
     std::string PipewireOption::getType() const { return this->type; }
+    bool PipewireOption::hasValue() const {
+         if (this->value.empty() || this->value == "''" || this->value == "0") return false;
+         return true;
+     }
 
     int PipewireOption::setValue(const char* value, const char* type) {
         const std::string v = value ? value : this->value;

@@ -30,6 +30,7 @@ namespace AudioAPI {
         std::string getKey() const;
         std::string getValue() const;
         std::string getType() const;
+        bool hasValue() const;
         int setValue(const char* value = nullptr, const char* type = nullptr);
     };
 
