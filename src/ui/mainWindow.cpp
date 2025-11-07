@@ -24,7 +24,7 @@ namespace userInterface {
                             this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).getValue() :
                             this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).getValue();
 
-        this->setFixedSize(500, 375); // height is 400 if you want to add a statusbar
+        this->setFixedSize(500, 315); // height is +25 if you want to add a statusbar
         this->setWindowTitle(QString(appStrings::appNameWithVersion().data()));
 
         /*
@@ -64,13 +64,6 @@ namespace userInterface {
         menuBar_file = menuBar -> addMenu("File");
         menuBar_file -> setObjectName("File menu");
 
-        action_Apply = new QAction();
-        action_Apply -> setObjectName(QAnyStringView("Apply action"));
-        action_Apply -> setText("Apply");
-        action_Apply -> setShortcut(QKeySequence(Qt::CTRL|Qt::Key_S));
-        action_Apply -> setEnabled(false);
-        QObject::connect(action_Apply, &QAction::triggered, this, [this]() -> void { this->applyChanges(); });
-
         action_Reload = new QAction();
         action_Reload -> setObjectName(QAnyStringView("Reload action"));
         action_Reload -> setText("Reload");
@@ -100,7 +93,6 @@ namespace userInterface {
             QCoreApplication::quit();
         });
 
-        menuBar_file -> addAction(action_Apply);
         menuBar_file -> addAction(action_Reload);
         menuBar_file -> addSeparator();
         menuBar_file -> addAction(action_Quit);
@@ -146,42 +138,23 @@ namespace userInterface {
 
         // Operation Mode - Row 3
 
-        groupBox_SampleRate = new QGroupBox(centralWidget);
-        groupBox_SampleRate -> setGeometry(95, 165, 155, 95);
-        groupBox_SampleRate -> setFlat(true);
-
-        sampleRate_Suggest = new QRadioButton(groupBox_SampleRate);
-        sampleRate_Suggest -> setObjectName("Suggest Sample Rate");
-        sampleRate_Suggest -> setGeometry(5, 5, 137, 23);
-        sampleRate_Suggest -> setText("Suggest");
-        sampleRate_Suggest -> setChecked(true);
-
-        sampleRate_Force = new QRadioButton(groupBox_SampleRate);
-        sampleRate_Force -> setObjectName("Force Sample Rate");
-        sampleRate_Force -> setGeometry(5, 35, 137, 23);
-        sampleRate_Force -> setText("Force");
-        sampleRate_Force -> setChecked(false);
-
-        groupBox_BufferSize = new QGroupBox(centralWidget);
-        groupBox_BufferSize -> setGeometry(295, 165, 155, 95);
-        groupBox_BufferSize -> setFlat(true);
-
-        bufferSize_Suggest = new QRadioButton(groupBox_BufferSize);
-        bufferSize_Suggest -> setObjectName("Suggest buffer size");
-        bufferSize_Suggest -> setGeometry(5, 5, 137, 23);
-        bufferSize_Suggest -> setText("Suggest");
-        bufferSize_Suggest -> setChecked(true);
-
-        bufferSize_Force = new QRadioButton(groupBox_BufferSize);
-        bufferSize_Force -> setObjectName("Force buffer size");
-        bufferSize_Force -> setGeometry(5, 35, 137, 23);
-        bufferSize_Force -> setText("Force");
-        bufferSize_Force -> setChecked(false);
+        forceOptions = new QCheckBox(centralWidget);
+        forceOptions -> setObjectName("Force Options");
+        forceOptions -> setGeometry(100, 190, 137, 23);
+        forceOptions -> setText("Force Options");
+        if (pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).hasValue() || pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).hasValue()) {
+            forceOptions -> setChecked(true);
+        } else {
+            forceOptions -> setChecked(false);
+        }
+        QObject::connect(forceOptions, &QCheckBox::clicked, [this] -> void {
+            this->applyChanges();
+        });
 
         // Control Buttons - Row 4
 
         button_Reset = new QPushButton("Reset button", centralWidget);
-        button_Reset -> setGeometry(154, 297, 140, 34);
+        button_Reset -> setGeometry(10, 240, 140, 34);
         button_Reset -> setText("Reset to Default");
         QObject::connect(button_Reset, &QPushButton::pressed, [this]() ->void {
             this->disableUI();
@@ -195,27 +168,9 @@ namespace userInterface {
             this->comboBox_BufferSize->setCurrentIndex(this->currBufferSizeIndex());
 
             this->enableUI(true);
+
+            this->forceOptions->setChecked(false);
         });
-
-        button_Apply = new QPushButton("Apply button", centralWidget);
-        button_Apply -> setGeometry(304, 297, 88, 34);
-        button_Apply -> setText("Apply");
-        QObject::connect(button_Apply, &QPushButton::pressed, [this]() -> void { this->applyChanges(); });
-        button_Apply -> setEnabled(false);
-
-        button_Cancel = new QPushButton("Cancel button", centralWidget);
-        button_Cancel -> setGeometry(402, 297, 88, 34);
-        button_Cancel -> setText("Cancel");
-        QObject::connect(button_Cancel, &QPushButton::pressed, [this]() -> void {
-            this->disableUI();
-
-            this->comboBox_SampleRate->setCurrentIndex(this->currSampleRateIndex());
-            this->comboBox_SampleRate->setCurrentIndex(this->currBufferSizeIndex());
-
-            this->enableUI(true);
-        });
-        button_Cancel -> setEnabled(false);
-
 
         // add main widget to window
         this->setCentralWidget(centralWidget);
@@ -257,21 +212,14 @@ namespace userInterface {
         tray_Quit -> setEnabled(false);
         tray_Restore -> setEnabled(false);
 
-        action_Apply -> setEnabled(false);
         action_Quit -> setEnabled(false);
         action_Reload -> setEnabled(false);
 
         comboBox_BufferSize -> setEnabled(false);
         comboBox_SampleRate -> setEnabled(false);
 
-        sampleRate_Force -> setEnabled(false);
-        sampleRate_Suggest -> setEnabled(false);
+        forceOptions -> setEnabled(false);
 
-        bufferSize_Force -> setEnabled(false);
-        bufferSize_Suggest -> setEnabled(false);
-
-        button_Apply -> setEnabled(false);
-        button_Cancel -> setEnabled(false);
         button_Reset -> setEnabled(false);
     }
 
@@ -279,37 +227,20 @@ namespace userInterface {
         tray_Quit -> setEnabled(true);
         tray_Restore -> setEnabled(true);
 
-        if (!keepActionsDisabled) action_Apply -> setEnabled(true);
         action_Quit -> setEnabled(true);
         action_Reload -> setEnabled(true);
 
         comboBox_BufferSize -> setEnabled(true);
         comboBox_SampleRate -> setEnabled(true);
 
-        sampleRate_Force -> setEnabled(true);
-        sampleRate_Suggest -> setEnabled(true);
+        forceOptions -> setEnabled(true);
 
-        bufferSize_Force -> setEnabled(true);
-        bufferSize_Suggest -> setEnabled(true);
-
-        if (!keepActionsDisabled) button_Apply -> setEnabled(true);
-        if (!keepActionsDisabled) button_Cancel -> setEnabled(true);
         button_Reset -> setEnabled(true);
     }
 
-    void MainWindow::comboboxChanged() const {
-        const std::string sr = this->comboBox_SampleRate->currentText().toStdString();
-        const std::string bs = this->comboBox_BufferSize->currentText().toStdString();
-
-        if (sr != this->activeSR || bs != this->activeBS) {
-            this->button_Apply->setEnabled(true);
-            this->button_Cancel->setEnabled(true);
-            this->action_Apply->setEnabled(true);
-        } else {
-            this->button_Apply->setEnabled(false);
-            this->button_Cancel->setEnabled(false);
-            this->action_Apply->setEnabled(false);
-        }
+    void MainWindow::comboboxChanged() {
+        std::cout << "changed\n";
+        this->applyChanges();
     }
 
     void MainWindow::applyChanges() {
@@ -318,34 +249,21 @@ namespace userInterface {
         const std::string sr = this->comboBox_SampleRate->currentText().toStdString();
         const std::string bs = this->comboBox_BufferSize->currentText().toStdString();
 
-        if (this->sampleRate_Suggest->isChecked()) {
-            if (this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).getValue() != "0")
-                this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).setValue("0", "");
-
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).setValue(sr.c_str(), "");
-        } else if (this->sampleRate_Force->isChecked()) {
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).setValue(sr.c_str(), "");
+        if (this->forceOptions->isChecked()) {
             this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).setValue(sr.c_str(), "");
-        }
-
-        if (this->bufferSize_Suggest->isChecked()) {
-            if (this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).getValue() != "0")
-                this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).setValue("0", "");
-
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).setValue(bs.c_str(), "");
-        } else if (this->bufferSize_Force->isChecked()) {
-            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).setValue(bs.c_str(), "");
             this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).setValue(bs.c_str(), "");
+        } else {
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_RATE).setValue("0", "");
+            this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_FORCE_QUANTUM).setValue("0", "");
         }
+
+        this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_RATE).setValue(sr.c_str(), "");
+        this->pwConn.getOption(AudioAPI::PW_OPT_CLOCK_QUANTUM).setValue(bs.c_str(), "");
 
         this->activeSR = sr;
         this->activeBS = bs;
 
         this->enableUI(true);
-
-        this->button_Apply->setEnabled(false);
-        this->button_Cancel->setEnabled(false);
-        this->action_Apply->setEnabled(false);
     }
 
     int MainWindow::currSampleRateIndex() const {

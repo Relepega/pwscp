@@ -3,6 +3,7 @@
 
 #include <QComboBox>
 #include <QGroupBox>
+#include <QCheckBox>
 #include <QLabel>
 #include <QMainWindow>
 #include <QMenuBar>
@@ -24,14 +25,13 @@ namespace userInterface {
         std::unique_ptr<QIcon> appIcon;
         QSystemTrayIcon* sysTray;
 
-        QMenu* trayMenu;
+        QMenu*   trayMenu;
         QAction* tray_Restore;
         QAction* tray_Quit;
 
         QMenuBar* menuBar;
 
         QMenu*    menuBar_file;
-        QAction*  action_Apply;
         QAction*  action_Reload;
         QAction*  action_Quit;
 
@@ -39,24 +39,16 @@ namespace userInterface {
         QLabel* label_SampleRate;
         QLabel* label_BufferSize;
 
-        QComboBox* comboBox_SampleRate;
+        QComboBox*       comboBox_SampleRate;
         std::vector<int> sampleRates;
-        std::string activeSR;
-        QComboBox* comboBox_BufferSize;
+        std::string      activeSR;
+        QComboBox*       comboBox_BufferSize;
         std::vector<int> bufferSizes;
-        std::string activeBS;
+        std::string      activeBS;
 
-        QGroupBox*    groupBox_SampleRate;
-        QRadioButton* sampleRate_Suggest;
-        QRadioButton* sampleRate_Force;
-
-        QGroupBox*    groupBox_BufferSize;
-        QRadioButton* bufferSize_Suggest;
-        QRadioButton* bufferSize_Force;
+        QCheckBox* forceOptions;
 
         QPushButton* button_Reset;
-        QPushButton* button_Apply;
-        QPushButton* button_Cancel;
 
         bool trueCloseSignal = false;
         AudioAPI::audioDevices adevs;
@@ -76,7 +68,7 @@ private slots:
         ~MainWindow() override;
         void disableUI() const;
         void enableUI(bool keepActionsDisabled = false) const;
-        void comboboxChanged() const;
+        void comboboxChanged();
         void applyChanges();
         void fillSampleRateComboBox();
         void fillBufferSizeComboBox();
