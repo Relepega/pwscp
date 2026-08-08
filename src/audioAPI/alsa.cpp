@@ -1,3 +1,5 @@
+// NOTE: This file has been written with the help of Claude Haiku 4.5 (Free Tier) because i'm still a noob at reading
+//          C/C++ api docs, please don't hate me for that...
 #include "alsa.h"
 
 #include <algorithm>

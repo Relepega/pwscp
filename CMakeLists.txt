@@ -14,19 +14,20 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
 # include standard install paths
 include(GNUInstallDirs)
 
-find_package(Qt6 COMPONENTS
+find_package(Qt6 REQUIRED COMPONENTS
              Core
              Gui
              Widgets
              DBus
-             QuickControls2
-             REQUIRED)
+             QuickControls2)
 
 find_package(ALSA REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(PIPEWIRE REQUIRED libpipewire-0.3)
 pkg_check_modules(SPA REQUIRED libspa-0.2)
+
+qt_standard_project_setup()
 
 include_directories(
         ${PIPEWIRE_INCLUDE_DIRS}
@@ -46,6 +47,7 @@ add_executable(${PROJECT_NAME} src/main.cpp
                src/audioAPI/Pipewire.h
                src/utils/utils.cpp
                src/utils/utils.h
+               src/ui/platformTheme.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${ALSA_INCLUDE_DIRS})
@@ -80,3 +82,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                         -fsanitize=undefined
     )
 endif()
+
+install(TARGETS ${PROJECT_NAME}
+        BUNDLE DESTINATION .
+        RUNTIME DESTINATION .
+)
