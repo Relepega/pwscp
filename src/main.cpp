@@ -7,9 +7,14 @@
 #include <iostream>
 
 #include "appStrings/AppStrings.h"
+#include "runGuard/RunGuard.h"
 #include "ui/mainWindow.h"
 
 int main(int argc, char *argv[]) {
+    RunGuard guard( "pwscp_app" );
+    if ( !guard.tryToRun() )
+        return 0;
+
     try {
         QApplication app(argc, argv);
 

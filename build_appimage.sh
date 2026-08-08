@@ -39,4 +39,4 @@ ldd ./pwscp.AppDir/usr/bin/pwscp | grep "=>" | awk '{print $3}' | while read lib
 done
 
 # Create the AppImage
-sudo /home/lorenzo/Downloads/appimagetool-x86_64.AppImage ./pwscp.AppDir pwscp.AppImage
+sudo ./Tools/appimagetool/appimagetool-x86_64.AppImage ./pwscp.AppDir pwscp.AppImage

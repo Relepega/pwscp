@@ -1,0 +1,1 @@
+Credits for this solution go to [Dmitry Sazonov](https://stackoverflow.com/users/1035613/dmitry-sazonov) for the solution to the "single instance app in qt6" problem on this [stackoverflow solution](https://stackoverflow.com/a/28172162)

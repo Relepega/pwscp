@@ -48,6 +48,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
                src/utils/utils.cpp
                src/utils/utils.h
                src/ui/platformTheme.cpp
+               src/runGuard/RunGuard.cpp
+               src/runGuard/RunGuard.h
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${ALSA_INCLUDE_DIRS})
