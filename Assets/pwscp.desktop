@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=PipeWire Simple Control Panel
-Comment=Utility to quickly change sample rate and buffer size
-Exec=pwscp
-Icon=pwscp
-Type=Application
-Categories=Utility;AudioVideo;
-SingleMainWindow=true
