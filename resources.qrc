@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Assets/pwscp.png</file>
+        <file>Assets/icons/16x16/pwscp.png</file>
+        <file>Assets/icons/24x24/pwscp.png</file>
+        <file>Assets/icons/32x32/pwscp.png</file>
+        <file>Assets/icons/48x48/pwscp.png</file>
+        <file>Assets/icons/64x64/pwscp.png</file>
+        <file>Assets/icons/128x128/pwscp.png</file>
+        <file>Assets/icons/256x256/pwscp.png</file>
+        <file>Assets/icons/512x512/pwscp.png</file>
+    </qresource>
+</RCC>

@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(pwscp LANGUAGES CXX)
+set(PROJECT_VERSION 0.0.1)
+set(CMAKE_PROJECT_NAME "PipeWire Simple Control Panel")
+set(PROJECT_DESCRIPTION "Utility to quickly change sample rate and buffer size")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -50,6 +53,7 @@ add_executable(${PROJECT_NAME} src/main.cpp
                src/ui/platformTheme.cpp
                src/runGuard/RunGuard.cpp
                src/runGuard/RunGuard.h
+               resources.qrc
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${ALSA_INCLUDE_DIRS})
@@ -85,7 +89,18 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     )
 endif()
 
-install(TARGETS ${PROJECT_NAME}
-        BUNDLE DESTINATION .
-        RUNTIME DESTINATION .
+# install(TARGETS ${PROJECT_NAME}
+#         BUNDLE DESTINATION .
+#         RUNTIME DESTINATION .
+# )
+
+configure_file(
+        "${CMAKE_SOURCE_DIR}/Assets/pwscp.desktop.in"
+        "${CMAKE_SOURCE_DIR}/Assets/pwscp.desktop"
+        @ONLY
+)
+configure_file(
+        "${CMAKE_SOURCE_DIR}/src/appStrings/AppStrings.h.in"
+        "${CMAKE_SOURCE_DIR}/src/appStrings/AppStrings.h"
+        @ONLY
 )

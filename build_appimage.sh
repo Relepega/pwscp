@@ -3,16 +3,16 @@
 ## NOTE: Claude Haiku 4.5 (free tier) has been used to debug this script and to fix some errors, please don't hate me for that :)
 
 # delete the old build dir
-sudo rm -rf ./pwscp.AppDir
+rm -rf ./pwscp.AppDir
 
 # create new dir structure
 mkdir -p ./pwscp.AppDir/{usr/{bin,lib,lib64,share/{applications,icons,pixmaps}},opt,etc}
-mkdir -p ./pwscp.AppDir/usr/share/icons/hicolor/256x256/
 
 # copy assets and executable
 cp ./cmake-build-release/pwscp ./pwscp.AppDir/usr/bin/pwscp
 cp ./Assets/pwscp.png ./pwscp.AppDir/pwscp.png
 cp ./Assets/pwscp.desktop ./pwscp.AppDir/pwscp.desktop
+cp -r ./Assets/icons ./pwscp.AppDir/usr/share/icons/hicolor
 
 # Create AppRun script
 cat > ./pwscp.AppDir/AppRun << 'EOF'
@@ -39,4 +39,4 @@ ldd ./pwscp.AppDir/usr/bin/pwscp | grep "=>" | awk '{print $3}' | while read lib
 done
 
 # Create the AppImage
-sudo ./Tools/appimagetool/appimagetool-x86_64.AppImage ./pwscp.AppDir pwscp.AppImage
+./Tools/appimagetool/appimagetool-x86_64.AppImage --runtime-file ./Tools/type2-runtime/runtime-x86_64 ./pwscp.AppDir pwscp.AppImage

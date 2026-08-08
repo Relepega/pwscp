@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=@CMAKE_PROJECT_NAME@
+Comment=@PROJECT_DESCRIPTION@
+Exec=pwscp
+Icon=pwscp
+Type=Application
+Categories=Utility;AudioVideo;
+SingleMainWindow=true

@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include "appStrings/AppStrings.h"
+#include "appStrings/AppStrings.h.in"
 #include "runGuard/RunGuard.h"
 #include "ui/mainWindow.h"
 

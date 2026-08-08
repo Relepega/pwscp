@@ -8,7 +8,7 @@
 #include <sstream>
 #include <string>
 
-#include "../appStrings/AppStrings.h"
+#include "../appStrings/AppStrings.h.in"
 #include "typo.h"
 
 namespace userInterface {
@@ -32,8 +32,8 @@ namespace userInterface {
          *
          */
 
-        // std::unique_ptr<QIcon> appIcon = std::make_unique<QIcon>("");
-        appIcon = std::make_unique<QIcon>("");
+        std::unique_ptr<QIcon> appIcon = std::make_unique<QIcon>(":/Assets/icons/32x32/pwscp.png");
+        //appIcon = std::make_unique<QIcon>("");
         sysTray = new QSystemTrayIcon(*appIcon, this);
         trayMenu = new QMenu(this);
 
